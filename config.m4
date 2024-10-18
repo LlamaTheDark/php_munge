@@ -12,8 +12,9 @@ PHP_ARG_WITH(munge, for Munge support,
 if test "$with_munge" != "no"; then
 	dnl Check if the munge library exists
 	AC_CHECK_LIB(munge, munge_encode, [
-		MUNGE_LIBS="-lmunge"
-		AC_DEFINE(HAVE_MUNGE, 1, [Define if you have libmunge])
+		AC_DEFINE([HAVE_LIBMUNGE], [1], [Define if libmunge is available])
+		AC_MSG_NOTICE([libmunge found.])
+		EXTRA_LDFLAGS="$EXTRA_LDFLAGS -lmunge"
 	], [
 		AC_MSG_ERROR([libmunge not found. Please install libmunge.])
 	])

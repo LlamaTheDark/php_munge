@@ -1,4 +1,5 @@
 #include <php.h>
+#include <munge.h>
 #include "php_munge.h"
 
 zend_function_entry munge_php_functions[] = {
@@ -22,5 +23,14 @@ zend_module_entry munge_php_module_entry = {
 ZEND_GET_MODULE(munge_php)
 
 PHP_FUNCTION(munge_php) {
-	php_printf("Munge! (from da extension)\n");
+	char *munge_cred = NULL;
+	int ret;
+
+	ret = munge_encode(&munge_cred, NULL, 0, 0);
+	if(ret != EMUNGE_SUCCESS){
+		php_printf("Failure lol");
+	}else{
+		php_printf("Munged credential: %s\n", munge_cred);
+	}
+	free(munge_cred);
 }
