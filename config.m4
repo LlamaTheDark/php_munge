@@ -1,5 +1,5 @@
-PHP_ARG_ENABLE(php_helloworld, Whether to enable the HelloWorldPHP extension [ --enable-helloworld-php HelloWorldPHP])
+PHP_ARG_ENABLE(php_munge, Whether to enable the MungePHP extension [ --enable-munge-php MungePHP])
 
-if test "$PHP_HELLOWORLD" != "no"; then
-	PHP_NEW_EXTENSION(php_helloworld, php_helloworld.c, $ext_shared)
+if test "$PHP_MUNGE" != "no"; then
+	PHP_NEW_EXTENSION(php_munge, php_munge.c, $ext_shared)
 fi
