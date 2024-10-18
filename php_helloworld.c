@@ -16,11 +16,11 @@ zend_module_entry helloworld_php_module_entry = {
 	NULL,
 	NULL,
 	PHP_HELLOWORLD_VERSION,
-	STANRARD_MODULE_PROPERTIES
+	STANDARD_MODULE_PROPERTIES
 };
 
 ZEND_GET_MODULE(helloworld_php)
 
 PHP_FUNCTION(helloworld_php) {
-	php_printf("Hello World! (from da extension)\n")
+	php_printf("Hello World! (from da extension)\n");
 }
