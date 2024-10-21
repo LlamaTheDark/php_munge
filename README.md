@@ -10,17 +10,17 @@ This is the source code for a very basic MUNGE extension for PHP. It includes th
 If you run debian-based linux, install the necessary libraries with:
 ```bash
 apt-get update && apt-get install -y \
-	libtool \
-	autoconf \
-	automake \
-	make \
-	gcc \
-	g++ \
+    libtool \
+    autoconf \
+    automake \
+    make \
+    gcc \
+    g++ \
     munge \
-	libmunge-dev \
-	vim \
+    libmunge-dev \
+    vim \
     php \
-	php-dev
+    php-dev
 ```
 
 ### Using older versions of PHP
