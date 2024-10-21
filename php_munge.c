@@ -29,19 +29,22 @@ ZEND_GET_MODULE(munge_php)
 
 PHP_FUNCTION(munge_php) {
 	char *munge_cred = NULL;
-	int ret; // return code
 	char *payload = NULL;
 	int payload_len;
 
+	int return_code; // return code
+	char err_buffer[256];
+
 	if(zend_parse_parameters(ZEND_NUM_ARGS(), "s", &payload, &payload_len) == FAILURE){
+		snprintf(err_buffer, sizeof(err_buffer), "Failed to parse parameters. return_code was %d", return_code);
+		zend_throw_error(NULL, err_buffer, 0);
 		RETURN_FALSE;
 	}
 
-	php_printf("Payload to pass: %s\n", payload);
-
-	ret = munge_encode(&munge_cred, NULL, (void**)payload, sizeof(char)*payload_len);
-	if (ret != EMUNGE_SUCCESS) {
-		// TODO: add useful error messages
+	return_code = munge_encode(&munge_cred, NULL, (void**)payload, sizeof(char)*payload_len);
+	if (return_code != EMUNGE_SUCCESS) {
+		snprintf(err_buffer, sizeof(err_buffer), "Failed to munge. return_code was %d", return_code);
+		zend_throw_error(NULL, err_buffer, 0);
 		RETURN_FALSE;
 	}
 	
@@ -53,31 +56,53 @@ PHP_FUNCTION(munge_php) {
 PHP_FUNCTION(unmunge_php) {
 	char *munge_cred; // Replace with your actual munged token
 	int cred_len;
-	munge_ctx_t ctx/* = munge_ctx_create()*/;
-	uid_t uid;
-	gid_t gid;
 
-	/*char *host = NULL, *ip = NULL,*/ 
-	time_t encode_time;
-	time_t decode_time;
 	void *payload;
 	int payload_len;
-	int ret;
+
+	munge_ctx_t ctx/* = munge_ctx_create()*/;
+
+	uid_t uid;
+	gid_t gid;
+	time_t encode_time;
+	time_t decode_time;
+
+	int return_code;
+	char err_buffer[256];
 
 	if(zend_parse_parameters(ZEND_NUM_ARGS(), "s", &munge_cred, &cred_len) == FAILURE){
+		snprintf(err_buffer, sizeof(err_buffer), "Failed to parse parameters. return_code was %d", return_code);
+		zend_throw_error(NULL, err_buffer, 0);
 		RETURN_FALSE;
 	}
 
  	// Unmunge the credential
- 	ret = munge_decode(munge_cred, ctx, &payload, &payload_len, &uid, &gid);
+ 	return_code = munge_decode(munge_cred, ctx, &payload, &payload_len, &uid, &gid);
+	if(return_code != EMUNGE_SUCCESS){
+		snprintf(err_buffer, sizeof(err_buffer), "Failed to decode munge token. return_code was %d. More detail:\n%s", return_code, munge_ctx_strerror(ctx));
+		zend_throw_error(NULL, err_buffer, 0);
+		RETURN_FALSE;
+	}
 	
-	ret = munge_ctx_get(ctx, MUNGE_OPT_ENCODE_TIME, &encode_time);
-	ret = munge_ctx_get(ctx, MUNGE_OPT_DECODE_TIME, &decode_time);
+	return_code = munge_ctx_get(ctx, MUNGE_OPT_ENCODE_TIME, &encode_time);
+	if(return_code != EMUNGE_SUCCESS){
+		snprintf(err_buffer, sizeof(err_buffer), "Failed to obtain encode time. return_code was %d", return_code);
+		zend_throw_error(NULL, err_buffer, 0);
+		RETURN_FALSE;
+	}
+
+	return_code = munge_ctx_get(ctx, MUNGE_OPT_DECODE_TIME, &decode_time);
+	if(return_code != EMUNGE_SUCCESS){
+		snprintf(err_buffer, sizeof(err_buffer), "Failed to obtain decode time. return_code was %d", return_code);
+		zend_throw_error(NULL, err_buffer, 0);
+		RETURN_FALSE;
+	}
 
 	// `return_value` is automatically returned
 	array_init(return_value);
 
 	add_assoc_long(return_value, "encode_time", encode_time);
+	add_assoc_long(return_value, "decode_time", decode_time); /* empty, TODO: maybe creating a new context will solve this? */
 	add_assoc_long(return_value, "uid", uid);
 	add_assoc_long(return_value, "gid", gid);
 	add_assoc_string(return_value, "payload", (char*)payload);
