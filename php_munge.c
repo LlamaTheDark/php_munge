@@ -30,15 +30,20 @@ ZEND_GET_MODULE(munge_php)
 PHP_FUNCTION(munge_php) {
 	char *munge_cred = NULL;
 	char *payload = NULL;
-	int payload_len;
+	int payload_len = 0;
 
-	int return_code; // return code
+	int return_code;
 	char err_buffer[256];
 
-	if(zend_parse_parameters(ZEND_NUM_ARGS(), "s", &payload, &payload_len) == FAILURE){
-		snprintf(err_buffer, sizeof(err_buffer), "Failed to parse parameters. return_code was %d", return_code);
+	if(zend_parse_parameters(ZEND_NUM_ARGS(), "|s", &payload, &payload_len) == FAILURE){
+		snprintf(err_buffer, sizeof(err_buffer), "Failed to parse parameters.");
 		zend_throw_error(NULL, err_buffer, 0);
 		RETURN_FALSE;
+	}
+
+	if(payload_len == 0){
+		payload = "\0";
+		payload_len = 1;
 	}
 
 	return_code = munge_encode(&munge_cred, NULL, (void**)payload, sizeof(char)*payload_len);
@@ -75,8 +80,9 @@ PHP_FUNCTION(unmunge_php) {
 		RETURN_FALSE;
 	}
 
+	// read munge credential from passed arguments
 	if(zend_parse_parameters(ZEND_NUM_ARGS(), "s", &munge_cred, &cred_len) == FAILURE){
-		snprintf(err_buffer, sizeof(err_buffer), "Failed to parse parameters. return_code was %d", return_code);
+		snprintf(err_buffer, sizeof(err_buffer), "Failed to parse parameters.");
 		zend_throw_error(NULL, err_buffer, 0);
 		RETURN_FALSE;
 	}
@@ -111,7 +117,7 @@ PHP_FUNCTION(unmunge_php) {
 	array_init(return_value);
 
 	add_assoc_long(return_value, "encode_time", encode_time);
-	add_assoc_long(return_value, "decode_time", decode_time); /* empty, TODO: maybe creating a new context will solve this? */
+	add_assoc_long(return_value, "decode_time", decode_time);
 	add_assoc_long(return_value, "uid", uid);
 	add_assoc_long(return_value, "gid", gid);
 	add_assoc_string(return_value, "payload", (char*)payload);
