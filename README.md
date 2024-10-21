@@ -8,7 +8,7 @@ This is the source code for a very basic MUNGE extension for PHP. It includes th
 ## Installation
 ### Prerequisites:
 If you run debian-based linux, install the necessary libraries with:
-```bash
+```sh
 apt-get update && apt-get install -y \
     libtool \
     autoconf \
@@ -25,18 +25,18 @@ apt-get update && apt-get install -y \
 
 ### Using older versions of PHP
 Keep in mind that you will need to build the extension with the same `php` and `php-dev` version that you intend to run the extension on. To install other versions of php, try the following:
-```bash
+```sh
 sudo add-apt-repository ppa:ondrej/php
 sudo apt update
-sudo apt install phpX.Y // replace X.Y with the version you want to install (e.g. 8.2)
+sudo apt install phpX.Y # replace X.Y with the version you want to install (e.g. 8.2)
 sudo apt install phpX.Y-dev
 ```
 
 ## Building the extension
 Run the following to build and install the extension:
-```
-phpize // or phpizeX.Y
+```sh
+phpize # or phpizeX.Y
 ./configure --with-munge --enable-munge-php
 make
-make install // may need to run this with sudo
+make install # may need to run this with sudo
 ```
