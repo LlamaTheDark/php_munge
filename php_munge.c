@@ -60,8 +60,6 @@ PHP_FUNCTION(unmunge_php) {
 	void *payload;
 	int payload_len;
 
-	munge_ctx_t ctx/* = munge_ctx_create()*/;
-
 	uid_t uid;
 	gid_t gid;
 	time_t encode_time;
@@ -69,6 +67,13 @@ PHP_FUNCTION(unmunge_php) {
 
 	int return_code;
 	char err_buffer[256];
+
+	munge_ctx_t ctx = munge_ctx_create();
+	if(!ctx){
+		snprintf(err_buffer, sizeof(err_buffer), "Failed to create MUNGE context. return_code was %d", return_code);
+		zend_throw_error(NULL, err_buffer, 0);
+		RETURN_FALSE;
+	}
 
 	if(zend_parse_parameters(ZEND_NUM_ARGS(), "s", &munge_cred, &cred_len) == FAILURE){
 		snprintf(err_buffer, sizeof(err_buffer), "Failed to parse parameters. return_code was %d", return_code);
@@ -79,7 +84,7 @@ PHP_FUNCTION(unmunge_php) {
  	// Unmunge the credential
  	return_code = munge_decode(munge_cred, ctx, &payload, &payload_len, &uid, &gid);
 	if(return_code != EMUNGE_SUCCESS){
-		snprintf(err_buffer, sizeof(err_buffer), "Failed to decode munge token. return_code was %d. More detail:\n%s", return_code, munge_ctx_strerror(ctx));
+		snprintf(err_buffer, sizeof(err_buffer), "Failed to decode MUNGE token. return_code was %d. More detail:\n%s", return_code, munge_ctx_strerror(ctx));
 		zend_throw_error(NULL, err_buffer, 0);
 		RETURN_FALSE;
 	}
@@ -98,6 +103,10 @@ PHP_FUNCTION(unmunge_php) {
 		RETURN_FALSE;
 	}
 
+	// get username associated with uid
+	struct passwd *user_info = getpwuid(uid);
+	char *username = user_info ? user_info->pw_name : "unknown";
+
 	// `return_value` is automatically returned
 	array_init(return_value);
 
@@ -106,6 +115,7 @@ PHP_FUNCTION(unmunge_php) {
 	add_assoc_long(return_value, "uid", uid);
 	add_assoc_long(return_value, "gid", gid);
 	add_assoc_string(return_value, "payload", (char*)payload);
+	add_assoc_string(return_value, "username", username);
 
 	// Free the context when done
 	munge_ctx_destroy(ctx);
