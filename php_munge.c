@@ -1,8 +1,8 @@
-// TODO: add error handling
-
 #include <php.h>
 #include <munge.h>
 #include <time.h>
+#include <grp.h>
+#include <unistd.h>
 
 #include "php_munge.h"
 
@@ -41,6 +41,7 @@ PHP_FUNCTION(munge_php) {
 		RETURN_FALSE;
 	}
 
+	// TODO: maybe this works just because of the payload_len thing, because payload should already be "\0" I think...
 	if(payload_len == 0){
 		payload = "\0";
 		payload_len = 1;
@@ -55,11 +56,12 @@ PHP_FUNCTION(munge_php) {
 	
 	RETURN_STRING(munge_cred);
 
+	free(payload);
 	free(munge_cred);
 }
 
 PHP_FUNCTION(unmunge_php) {
-	char *munge_cred; // Replace with your actual munged token
+	char *munge_cred;
 	int cred_len;
 
 	void *payload;
@@ -90,7 +92,7 @@ PHP_FUNCTION(unmunge_php) {
  	// Unmunge the credential
  	return_code = munge_decode(munge_cred, ctx, &payload, &payload_len, &uid, &gid);
 	if(return_code != EMUNGE_SUCCESS){
-		snprintf(err_buffer, sizeof(err_buffer), "Failed to decode MUNGE token. return_code was %d. More detail:\n%s", return_code, munge_ctx_strerror(ctx));
+		snprintf(err_buffer, sizeof(err_buffer), "Failed to decode MUNGE credential. return_code was %d. More detail:\n%s", return_code, munge_ctx_strerror(ctx));
 		zend_throw_error(NULL, err_buffer, 0);
 		RETURN_FALSE;
 	}
@@ -113,6 +115,9 @@ PHP_FUNCTION(unmunge_php) {
 	struct passwd *user_info = getpwuid(uid);
 	char *username = user_info ? user_info->pw_name : "unknown";
 
+	struct group *group_info = getgrgid(gid);
+	char *groupname = group_info ? group_info->gr_name : "unknown";
+
 	// `return_value` is automatically returned
 	array_init(return_value);
 
@@ -122,7 +127,10 @@ PHP_FUNCTION(unmunge_php) {
 	add_assoc_long(return_value, "gid", gid);
 	add_assoc_string(return_value, "payload", (char*)payload);
 	add_assoc_string(return_value, "username", username);
+	add_assoc_string(return_value, "groupname", groupname);
 
 	// Free the context when done
 	munge_ctx_destroy(ctx);
+
+	free(payload);
 }
