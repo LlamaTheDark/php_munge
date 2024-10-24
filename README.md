@@ -24,7 +24,7 @@ apt-get update && apt-get install -y \
 ```
 
 ### Using older versions of PHP
-Keep in mind that you will need to build the extension with the same `php` and `php-dev` version that you intend to run the extension on. To install other versions of php, try the following:
+Keep in mind that you will need to build the extension with the same `php` and `php-dev` version and API that you intend to run the extension on. To install other versions of php, try the following:
 ```sh
 sudo add-apt-repository ppa:ondrej/php
 sudo apt update
